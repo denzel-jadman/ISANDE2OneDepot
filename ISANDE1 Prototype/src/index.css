@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media print {
+  nav { display: none; }
+  body { background: white; color: black; }
+  .report-print-area { max-width: none; padding: 0; }
+  .bg-panel, .bg-gunmetal { background: white !important; color: black !important; }
+  .border-gray-700, .border-gray-800 { border-color: #c7c7c7 !important; }
+  .text-gray-400, .text-gray-500 { color: #555 !important; }
+  .text-amber, .text-warning, .text-olive { color: #8a5200 !important; }
+
+  body:has(.purchase-order-print-target) * {
+    visibility: hidden;
+  }
+
+  .purchase-order-print-target,
+  .purchase-order-print-target * {
+    visibility: visible !important;
+  }
+
+  .purchase-order-print-target {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0 !important;
+  }
+
+  .purchase-order-print-target .purchase-order-actions {
+    display: none;
+  }
+
+  body:has(.repair-print-target) * {
+    visibility: hidden;
+  }
+
+  .repair-print-target,
+  .repair-print-target * {
+    visibility: visible !important;
+  }
+
+  .repair-print-target {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 1.5cm;
+    background: white !important;
+    color: black !important;
+  }
+}
+
+.repair-print-document {
+  display: none;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #1a1611;
+  color: #f3f1ec;
+}
+
+h1, h2, h3, .font-heading {
+  font-family: "Oswald", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.font-mono-data {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.shop-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.25rem;
+  row-gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.shop-product-section {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.shop-filter-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+@media (max-width: 767px) {
+  .shop-filter-toolbar {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 640px) {
+  .shop-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .shop-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

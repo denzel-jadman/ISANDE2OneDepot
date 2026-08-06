@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Tactical scope and rail attachment">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17140f"/><stop offset="1" stop-color="#343026"/></linearGradient><linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5b564d"/><stop offset=".45" stop-color="#161513"/><stop offset=".7" stop-color="#48443c"/><stop offset="1" stop-color="#11100f"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#bg)"/><path d="M0 72h640M0 288h640" stroke="#f5a623" stroke-opacity=".1"/>
+  <g transform="translate(89 101)" stroke="#0a0908" stroke-width="10" stroke-linejoin="round"><path d="M72 55h308l35 30-35 31H72l-37-30z" fill="url(#body)"/><ellipse cx="72" cy="85" rx="42" ry="57" fill="#23211d"/><ellipse cx="72" cy="85" rx="26" ry="40" fill="#839a88" stroke="#171713"/><ellipse cx="380" cy="85" rx="42" ry="57" fill="#24221e"/><ellipse cx="380" cy="85" rx="26" ry="40" fill="#5c796e" stroke="#171713"/><path d="M180 51V11h76v40M180 116v40h76v-40" fill="#333027"/><path d="M118 167h236l24 28H94z" fill="#25231e"/></g>
+  <g stroke="#f5a623" stroke-width="3" opacity=".8"><path d="M322 48v34M305 65h34"/><circle cx="322" cy="65" r="17" fill="none"/></g>
+</svg>

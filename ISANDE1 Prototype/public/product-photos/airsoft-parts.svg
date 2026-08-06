@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Airsoft gearbox and internal parts">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#181510"/><stop offset="1" stop-color="#39342a"/></linearGradient><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d1c6a8"/><stop offset=".5" stop-color="#635d50"/><stop offset="1" stop-color="#171613"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#bg)"/><path d="M80 292 560 68M0 236 415 40" stroke="#f5a623" stroke-opacity=".12" stroke-width="2"/>
+  <g transform="translate(124 54)" fill="url(#metal)" stroke="#11100e" stroke-width="10" stroke-linejoin="round"><path d="M97 51h182l45 48-47 54h-65l-20 61h-78l-15-58H54L20 113l37-62z"/><path d="M278 99h76l25 30-30 35h-84z"/><circle cx="154" cy="112" r="39" fill="#27241f"/><circle cx="154" cy="112" r="19" fill="#c8a760"/><circle cx="154" cy="112" r="8" fill="#25211c"/><circle cx="249" cy="119" r="19" fill="#28251f"/><circle cx="249" cy="119" r="7" fill="#c8a760"/></g>
+  <g fill="#f5a623"><circle cx="139" cy="73" r="5"/><circle cx="424" cy="208" r="5"/><circle cx="349" cy="286" r="4"/></g>
+</svg>

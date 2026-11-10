@@ -114,3 +114,12 @@ h1, h2, h3, .font-heading {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.guided-form :is(input, select, textarea)[aria-invalid="true"] {
+  border-color: #ef8883;
+}
+
+.guided-form :is(input, select, textarea, button, a):focus-visible {
+  outline: 2px solid #f5c875;
+  outline-offset: 2px;
+}

@@ -2,6 +2,11 @@ const STATE_KEY = "onedepot_demo_state";
 const CURRENT_USER_KEY = "onedepot_demo_user_id";
 const WAITLIST_KEY = "onedepot_waitlist";
 
+export function clearDemoSession() {
+  localStorage.removeItem("onedepot_token");
+  localStorage.removeItem(CURRENT_USER_KEY);
+}
+
 const starterProducts = [
   ["M16-GB-001", "M16 Gearbox Assembly", "Airsoft Parts & Internals", 1500, 5],
   ["AK47-GB-001", "AK47 Gearbox Assembly", "Airsoft Parts & Internals", 1800, 8],
@@ -210,7 +215,7 @@ const api = {
     const data = state();
     if (url === "/auth/login") {
       const user = data.users.find((entry) => entry.email === body.email && entry.password === body.password);
-      if (!user) return fail("Invalid email or password");
+      if (!user || (body.shopOnly && canManageInventory(user))) return fail("Invalid email or password");
       localStorage.setItem(CURRENT_USER_KEY, user.id);
       return response({ token: token(user), user });
     }

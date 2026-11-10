@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:inventory": "vite --mode inventory --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview"
   },

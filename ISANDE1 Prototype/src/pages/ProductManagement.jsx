@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
-import api from "../api.js";
+import InventoryImport from "../components/InventoryImport.jsx";
+import InventoryNavbar from "../components/InventoryNavbar.jsx";
+import demoApi from "../api.js";
+import { inventoryApi, inventoryMode } from "../inventoryApi.js";
 import { categoryGroups } from "../constants/categories.js";
+
+const api = inventoryMode ? inventoryApi : demoApi;
+const emptyProduct = { sku: "", name: "", category: "", price: "", quantity: "", lowStockAt: "", supplierId: "" };
 
 function WaitlistView({ entries, loading }) {
   const requestedProducts = new Set(entries.map((entry) => entry.productId)).size;
@@ -23,17 +29,22 @@ function WaitlistView({ entries, loading }) {
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [waitlist, setWaitlist] = useState([]);
   const [activeView, setActiveView] = useState("products");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ sku: "", name: "", category: "", price: "", quantity: "", lowStockAt: "" });
+  const [form, setForm] = useState(emptyProduct);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (inventoryMode) {
+      fetchProducts();
+      return;
+    }
     const token = localStorage.getItem("onedepot_token");
     if (!token) {
       navigate("/login");
@@ -58,10 +69,15 @@ export default function ProductManagement() {
   async function fetchProducts() {
     try {
       setLoading(true);
-      const [productsResponse, waitlistResponse] = await Promise.all([api.get("/products"), api.get("/waitlist")]);
+      const [productsResponse, relatedResponse] = await Promise.all([
+        api.get("/products"),
+        api.get(inventoryMode ? "/suppliers" : "/waitlist"),
+      ]);
       setProducts(productsResponse.data);
-      setWaitlist(waitlistResponse.data);
+      if (inventoryMode) setSuppliers(relatedResponse.data);
+      else setWaitlist(relatedResponse.data);
     } catch (err) {
+      if (inventoryMode && err.response?.status === 401) return;
       setError("Failed to load products");
       console.error(err);
     } finally {
@@ -87,6 +103,13 @@ export default function ProductManagement() {
         quantity: parseInt(form.quantity) || 0,
         lowStockAt: parseInt(form.lowStockAt) || 5,
       };
+      if (inventoryMode) {
+        payload.price = String(Number(form.price));
+        payload.quantity = form.quantity === "" ? 0 : Number(form.quantity);
+        payload.lowStockAt = form.lowStockAt === "" ? 5 : Number(form.lowStockAt);
+        payload.supplierId = form.supplierId ? Number(form.supplierId) : null;
+        if (editing) payload.version = editing.version;
+      }
 
       if (editing) {
         await api.patch(`/products/${editing.id}`, payload);
@@ -97,17 +120,37 @@ export default function ProductManagement() {
       resetForm();
       fetchProducts();
     } catch (err) {
+      if (inventoryMode && err.response?.status === 401) return;
+      if (inventoryMode && err.response?.data?.code === "PRODUCT_CHANGED") {
+        resetForm();
+        await fetchProducts();
+      }
       setError(err.response?.data?.error ?? "Something went wrong");
     }
   }
 
+  async function addSupplier(event) {
+    event.preventDefault();
+    setError("");
+    const supplierForm = event.currentTarget;
+    try {
+      const { data } = await inventoryApi.post("/suppliers", Object.fromEntries(new FormData(supplierForm)));
+      setSuppliers((current) => [...current, data].sort((a, b) => a.name.localeCompare(b.name)));
+      supplierForm.reset();
+    } catch (err) {
+      if (err.response?.status === 401) return;
+      setError(err.response?.data?.error ?? "Could not add the supplier.");
+    }
+  }
+
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    if (!confirm(inventoryMode ? "Archive this product and retain its stock history?" : "Are you sure you want to delete this product?")) return;
     try {
       await api.delete(`/products/${id}`);
       fetchProducts();
     } catch (err) {
-      setError("Failed to delete product");
+      if (inventoryMode && err.response?.status === 401) return;
+      setError(err.response?.data?.error ?? "Failed to delete product");
     }
   }
 
@@ -120,12 +163,13 @@ export default function ProductManagement() {
       price: product.price,
       quantity: product.quantity,
       lowStockAt: product.lowStockAt,
+      supplierId: product.supplierId ?? "",
     });
     setShowForm(true);
   }
 
   function resetForm() {
-    setForm({ sku: "", name: "", category: "", price: "", quantity: "", lowStockAt: "" });
+    setForm(emptyProduct);
     setEditing(null);
     setShowForm(false);
     setError("");
@@ -139,7 +183,7 @@ export default function ProductManagement() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      {inventoryMode ? <InventoryNavbar /> : <Navbar />}
 
       <div className="px-6 py-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-start mb-8">
@@ -148,8 +192,8 @@ export default function ProductManagement() {
             <p className="text-gray-400 text-sm">Add, edit, and manage inventory</p>
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
-            <button onClick={() => setActiveView("products")} className={`px-4 py-2 rounded-card text-sm font-semibold border ${activeView === "products" ? "bg-white text-gunmetal border-white" : "border-gray-700 text-gray-300 hover:border-amber"}`}>Products</button>
-            <button onClick={() => { setActiveView("waitlist"); setShowForm(false); }} className={`px-4 py-2 rounded-card text-sm font-semibold border ${activeView === "waitlist" ? "bg-white text-gunmetal border-white" : "border-gray-700 text-gray-300 hover:border-amber"}`}>Waitlist {waitlist.length ? `(${waitlist.length})` : ""}</button>
+            {!inventoryMode && <><button onClick={() => setActiveView("products")} className={`px-4 py-2 rounded-card text-sm font-semibold border ${activeView === "products" ? "bg-white text-gunmetal border-white" : "border-gray-700 text-gray-300 hover:border-amber"}`}>Products</button>
+            <button onClick={() => { setActiveView("waitlist"); setShowForm(false); }} className={`px-4 py-2 rounded-card text-sm font-semibold border ${activeView === "waitlist" ? "bg-white text-gunmetal border-white" : "border-gray-700 text-gray-300 hover:border-amber"}`}>Waitlist {waitlist.length ? `(${waitlist.length})` : ""}</button></>}
             {activeView === "products" && <button onClick={() => setShowForm(!showForm)} className="bg-amber text-gunmetal px-4 py-2 rounded-card font-semibold text-sm hover:bg-amber/80 transition-colors">{showForm ? "Cancel" : "+ Add Product"}</button>}
           </div>
         </div>
@@ -160,13 +204,34 @@ export default function ProductManagement() {
           </div>
         )}
 
+        {inventoryMode && <InventoryImport onImported={fetchProducts} />}
+
+        {inventoryMode && (
+          <details className="bg-panel border border-gray-700 rounded-card p-4 mb-6">
+            <summary className="cursor-pointer font-semibold">Add supplier</summary>
+            <form onSubmit={addSupplier} className="mt-4 flex flex-wrap items-end gap-3">
+              <label className="text-sm">Supplier name
+                <input name="name" required maxLength={160} className="block mt-1 bg-gunmetal rounded-card p-2" />
+              </label>
+              <label className="text-sm">Supplier email
+                <input name="email" type="email" maxLength={254} className="block mt-1 bg-gunmetal rounded-card p-2" />
+              </label>
+              <label className="text-sm">Supplier phone
+                <input name="phone" type="tel" maxLength={40} className="block mt-1 bg-gunmetal rounded-card p-2" />
+              </label>
+              <button className="bg-amber text-gunmetal rounded-card px-4 py-2 font-semibold">Save supplier</button>
+            </form>
+          </details>
+        )}
+
         {showForm && activeView === "products" && (
           <form onSubmit={handleSubmit} className="bg-panel border border-gray-700 rounded-card p-6 mb-8 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">SKU *</label>
+                <label htmlFor="product-sku" className="text-xs text-gray-400 block mb-1">SKU *</label>
                 <input
                   required
+                  id="product-sku"
                   value={form.sku}
                   onChange={(e) => setForm({ ...form, sku: e.target.value })}
                   className="w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm focus:outline-none focus:border-amber disabled:opacity-50"
@@ -174,9 +239,10 @@ export default function ProductManagement() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Name *</label>
+                <label htmlFor="product-name" className="text-xs text-gray-400 block mb-1">Name *</label>
                 <input
                   required
+                  id="product-name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm focus:outline-none focus:border-amber"
@@ -200,12 +266,27 @@ export default function ProductManagement() {
                   ))}
                 </select>
               </div>
+              {inventoryMode && (
+                <div>
+                  <label htmlFor="product-supplier" className="text-xs text-gray-400 block">Supplier</label>
+                  <select
+                    id="product-supplier"
+                    value={form.supplierId}
+                    onChange={(e) => setForm({ ...form, supplierId: e.target.value })}
+                    className="mt-1 w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm"
+                  >
+                    <option value="">No supplier assigned</option>
+                    {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Price *</label>
+                <label htmlFor="product-price" className="text-xs text-gray-400 block mb-1">Price *</label>
                 <input
                   required
                   type="number"
                   step="0.01"
+                  id="product-price"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
                   className="w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm focus:outline-none focus:border-amber"
@@ -213,9 +294,10 @@ export default function ProductManagement() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Quantity</label>
+                <label htmlFor="product-quantity" className="text-xs text-gray-400 block mb-1">Quantity</label>
                 <input
                   type="number"
+                  id="product-quantity"
                   value={form.quantity}
                   onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                   className="w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm focus:outline-none focus:border-amber"
@@ -223,9 +305,10 @@ export default function ProductManagement() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Low Stock Alert At</label>
+                <label htmlFor="product-lowStockAt" className="text-xs text-gray-400 block mb-1">Low Stock Alert At</label>
                 <input
                   type="number"
+                  id="product-lowStockAt"
                   value={form.lowStockAt}
                   onChange={(e) => setForm({ ...form, lowStockAt: e.target.value })}
                   className="w-full bg-gunmetal border border-gray-700 rounded-card px-3 py-2 text-sm focus:outline-none focus:border-amber"
@@ -285,7 +368,16 @@ export default function ProductManagement() {
                   {filteredProducts.map((product) => (
                     <tr key={product.id} className="border-b border-gray-800 hover:bg-gunmetal/50 transition-colors">
                       <td className="px-6 py-3 text-gray-300 font-mono text-xs">{product.sku}</td>
-                      <td className="px-6 py-3 text-gray-100">{product.name}</td>
+                      <td className="px-6 py-3 text-gray-100">
+                        <div className="flex items-center gap-3">
+                          {inventoryMode && product.photoPath && (
+                            <a href={product.photoPath} target="_blank" rel="noreferrer" aria-label={`Open photo for ${product.name}`}>
+                              <img src={product.photoPath} alt="" loading="lazy" className="h-12 w-12 rounded bg-gunmetal object-contain" />
+                            </a>
+                          )}
+                          <span>{product.name}</span>
+                        </div>
+                      </td>
                       <td className="px-6 py-3 text-gray-400 text-xs">{product.category || "-"}</td>
                       <td className="px-6 py-3 text-right text-gray-100">₱{parseFloat(product.price).toFixed(2)}</td>
                       <td className="px-6 py-3 text-right">
@@ -312,7 +404,7 @@ export default function ProductManagement() {
                             onClick={() => handleDelete(product.id)}
                             className="text-warning hover:text-warning/70 transition-colors text-xs font-semibold"
                           >
-                            Delete
+                            {inventoryMode ? "Archive" : "Delete"}
                           </button>
                         </div>
                       </td>

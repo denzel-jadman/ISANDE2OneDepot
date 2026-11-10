@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import NotificationBell from "./NotificationBell.jsx";
+import { clearDemoSession } from "../api.js";
+import { inventoryMode, lastOrderKey } from "../inventoryApi.js";
 
 function storedUser() {
   const token = localStorage.getItem("onedepot_token");
   if (!token) return null;
   try {
     const user = JSON.parse(atob(token.split(".")[1]));
+    if (inventoryMode && ["OWNER", "STAFF"].includes(user.role)) return null;
     return user.role === "OWNER" ? { ...user, name: "Gina" } : user;
   } catch {
     return null;
@@ -15,20 +18,21 @@ function storedUser() {
 
 export default function Navbar({ cartCount = 0 }) {
   const [user, setUser] = useState(storedUser);
+  const lastOrder = inventoryMode && localStorage.getItem(lastOrderKey);
   const navigate = useNavigate();
 
   function handleLogout() {
-    localStorage.removeItem("onedepot_token");
+    clearDemoSession();
     setUser(null);
     navigate("/login");
   }
 
   return (
-    <nav className="flex items-center justify-between px-8 py-5 border-b border-panel">
+    <nav className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 sm:px-8 py-4 border-b border-panel">
       <Link to={user?.role === "GUNSMITH" ? "/repairs" : "/"} className="font-heading text-2xl font-bold tracking-wide">
         JUSTIN'S <span className="text-amber">HOBBY DEPOT</span>
       </Link>
-      <div className="flex items-center gap-7 text-base font-semibold text-gray-300">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-base font-semibold text-gray-300">
         {user?.role !== "GUNSMITH" && <Link to="/" className="hover:text-amber transition-colors">Shop</Link>}
         {user && (user.role === "OWNER" || user.role === "STAFF") && (
           <Link to="/products" className="hover:text-amber transition-colors">Products</Link>
@@ -39,7 +43,8 @@ export default function Navbar({ cartCount = 0 }) {
         {user && (user.role === "OWNER" || user.role === "STAFF") && (
           <Link to="/customers" className="hover:text-amber transition-colors">Customers</Link>
         )}
-        {user?.role === "CUSTOMER" && (
+        {lastOrder && <Link to={"/order-status#" + lastOrder} className="hover:text-amber transition-colors">Latest order</Link>}
+        {!inventoryMode && user?.role === "CUSTOMER" && (
           <Link to="/orders" className="hover:text-amber transition-colors">My orders</Link>
         )}
         <Link to="/repairs" className="hover:text-amber transition-colors">Repairs</Link>
@@ -75,9 +80,9 @@ export default function Navbar({ cartCount = 0 }) {
         ) : (
           <Link
             to="/login"
-            className="text-amber hover:text-amber/70 transition-colors font-semibold"
+            className="inline-flex min-h-11 items-center rounded-card bg-amber px-4 font-semibold text-gunmetal hover:bg-amber/80"
           >
-            Login
+            Sign in
           </Link>
         )}
       </div>

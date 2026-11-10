@@ -1,0 +1,1 @@
+ALTER TABLE `Product` ADD COLUMN `photoPath` VARCHAR(255) NULL;

@@ -18,6 +18,7 @@ import Repairs from "./pages/Repairs.jsx";
 import Customers from "./pages/Customers.jsx";
 import Reports from "./pages/Reports.jsx";
 import Restocking from "./pages/Restocking.jsx";
+import Contact from "./pages/Contact.jsx";
 
 function CustomerShopRoute({ children }) {
   const token = localStorage.getItem("onedepot_token");
@@ -72,6 +73,7 @@ function AppRoutes() {
       <Route path="/restocking" element={<OwnerRoute><Restocking /></OwnerRoute>} />
       <Route path="/products" element={<OwnerRoute><ProductManagement /></OwnerRoute>} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/contact" element={<Contact />} />
     </Routes>
   );
 }

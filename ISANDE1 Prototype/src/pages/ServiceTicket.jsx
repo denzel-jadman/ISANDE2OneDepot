@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import api from "../api.js";
+import GcashQr from "../components/GcashQr.jsx";
 
 const STAGES = [
   { key: "AWAITING_GUNSMITH", label: "Ticket received and assigned" },
@@ -288,13 +289,13 @@ export default function ServiceTicket() {
             {isCustomer && ticket.status === "AWAITING_PAYMENT" && (
               <section className="grid md:grid-cols-2 gap-4">
                 <div className="bg-panel border border-gray-700 rounded-card p-5"><h2 className="font-heading text-lg">Pay at the store</h2><p className="text-sm text-gray-400 mt-2">Pay <Money value={ticket.totalPrice} className="text-amber" /> at the counter. The owner will record your payment and prepare the item for pickup.</p></div>
-                <form onSubmit={submitPayment} className="bg-panel border border-amber/50 rounded-card p-5"><h2 className="font-heading text-lg">Pay through GCash QR</h2><div className="my-3 bg-white text-gunmetal rounded-card h-28 flex flex-col items-center justify-center"><p className="font-heading text-xl">GCASH QR</p><p className="text-xs">Store demo payment code</p></div><p className="text-xs text-gray-400 mb-3">{repairSettings.gcashInstructions}</p><input required type="file" accept="image/*" onChange={(event) => setPaymentProof(event.target.files?.[0] ?? null)} className="w-full text-xs text-gray-400 mb-3" /><button className="w-full bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Submit GCash proof</button></form>
+                <form onSubmit={submitPayment} className="bg-panel border border-amber/50 rounded-card p-5"><h2 className="font-heading text-lg">Pay through GCash QR</h2><div className="my-3"><GcashQr size="sm" /></div><p className="text-xs text-gray-400 mb-3">{repairSettings.gcashInstructions}</p><input required type="file" accept="image/*" onChange={(event) => setPaymentProof(event.target.files?.[0] ?? null)} className="w-full text-xs text-gray-400 mb-3" /><button className="w-full bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Submit GCash proof</button></form>
               </section>
             )}
 
             {isOwner && ticket.status === "AWAITING_PAYMENT" && <section className="bg-panel border border-amber/50 rounded-card p-6 flex flex-wrap justify-between items-center gap-4"><div><h2 className="font-heading text-lg">Awaiting customer payment</h2><p className="text-sm text-gray-400 mt-1">If the customer pays at the counter, record the payment here.</p></div><button onClick={() => recordPayment("IN_STORE")} className="bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Record paid at store</button></section>}
 
-            {isOwner && ticket.status === "PAYMENT_SUBMITTED" && <section className="bg-panel border border-amber/50 rounded-card p-6 flex flex-wrap justify-between items-center gap-4"><div><h2 className="font-heading text-lg">Verify GCash payment</h2><p className="text-sm text-gray-400 mt-1">Proof file: <span className="text-white">{ticket.paymentProof}</span></p></div><button onClick={() => recordPayment("GCASH")} className="bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Confirm GCash payment</button></section>}
+            {isOwner && ticket.status === "PAYMENT_SUBMITTED" && <section className="bg-panel border border-amber/50 rounded-card p-6 flex flex-wrap justify-between items-center gap-4"><div><h2 className="font-heading text-lg">Verify GCash payment</h2>{ticket.paymentProof?.startsWith("data:image") ? <img src={ticket.paymentProof} alt="GCash payment proof" className="rounded-card mt-3 max-h-64" /> : <p className="text-sm text-gray-400 mt-1">No readable screenshot on file. Ask the customer to resubmit.</p>}</div><button onClick={() => recordPayment("GCASH")} className="bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Confirm GCash payment</button></section>}
 
             {ticket.status === "PAID_READY_FOR_PICKUP" && <section className="bg-olive/10 border border-olive rounded-card p-6 flex flex-wrap justify-between items-center gap-4"><div><h2 className="font-heading text-xl text-olive">Paid and ready for pickup</h2><p className="text-sm text-gray-300 mt-1">Payment method: {ticket.paymentMethod === "GCASH" ? "GCash" : "In store"} · Confirmed {formatDate(ticket.paidAt)}</p></div>{isOwner && <button onClick={completeTicket} className="bg-olive text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold">Mark item returned</button>}</section>}
 

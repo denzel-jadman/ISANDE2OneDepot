@@ -47,6 +47,7 @@ function initialState() {
     orders: [],
     tickets: [],
     repairSettings: { complexLaborPrice: 1500, gcashInstructions: "Pay using the store GCash QR and upload a clear screenshot of the payment." },
+    storeSettings: { gcashQr: null },
     purchaseOrders: [],
     restockNotes: [],
     notifications: [],
@@ -65,6 +66,7 @@ function state() {
   const owner = parsed.users?.find((user) => user.email === "owner@onedepot.com" && user.role === "OWNER");
   if (owner && owner.name !== "Gina") { owner.name = "Gina"; changed = true; }
   if (!parsed.nextIds) { parsed.nextIds = {}; changed = true; }
+  if (!parsed.storeSettings) { parsed.storeSettings = { gcashQr: null }; changed = true; }
   if (!Array.isArray(parsed.purchaseOrders)) { parsed.purchaseOrders = []; changed = true; }
   if (!Array.isArray(parsed.restockNotes)) { parsed.restockNotes = []; changed = true; }
   if (!Array.isArray(parsed.notifications)) { parsed.notifications = []; changed = true; }
@@ -107,6 +109,32 @@ function state() {
 function save(next) {
   localStorage.setItem(STATE_KEY, JSON.stringify(next));
   if (typeof window !== "undefined") window.dispatchEvent(new Event("onedepot:data-updated"));
+}
+// Reads an uploaded image, shrinks it, and returns a data URL so it fits in localStorage.
+function imageToDataUrl(file, { maxSize = 1000, quality = 0.72 } = {}) {
+  return new Promise((resolve) => {
+    if (!file) return resolve(null);
+    if (typeof file === "string") return resolve(file);
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => resolve(null);
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 function response(data) { return Promise.resolve({ data }); }
 function fail(error) { return Promise.reject({ response: { data: { error } } }); }
@@ -195,6 +223,7 @@ const api = {
         return { id: `${entry.owner}-${entry.productId}-${index}`, ...entry, customer: data.users.find((customer) => customer.id === userId && customer.role === "CUSTOMER"), product: data.products.find((product) => product.id === Number(entry.productId)) };
       }).filter((entry) => entry.customer && entry.product).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt)));
     }
+    if (url === "/store-settings") return response(data.storeSettings);
     if (url === "/repair-settings") return user ? response(data.repairSettings) : fail("Please log in");
     if (url === "/customers" || url === "/service-tickets/customers") return user?.role === "OWNER" || user?.role === "STAFF" ? response(data.users.filter((entry) => entry.role === "CUSTOMER")) : fail("Not authorized");
     if (url === "/service-tickets") {
@@ -316,7 +345,7 @@ const api = {
       const items = parseItems(body.get("items"));
       for (const item of items) { const product = data.products.find((entry) => entry.id === Number(item.productId)); if (!product || product.quantity < Number(item.quantity)) return fail(`${product?.name ?? "Product"} is out of stock`); }
       const subtotal = items.reduce((sum, item) => sum + Number(data.products.find((entry) => entry.id === Number(item.productId)).price) * Number(item.quantity), 0);
-      const order = { id: data.nextIds.order++, customerId: user.id, status: "PENDING_VERIFICATION", deliveryAddress: body.get("deliveryAddress"), contactNumber: body.get("contactNumber"), deliveryFee: Number(body.get("deliveryFee") ?? 0), total: subtotal + Number(body.get("deliveryFee") ?? 0), createdAt: now(), items: items.map((item, index) => ({ id: index + 1, productId: Number(item.productId), quantity: Number(item.quantity), unitPrice: data.products.find((entry) => entry.id === Number(item.productId)).price })), proofOfPayment: body.get("proofOfPayment")?.name ?? "payment-proof.png" };
+      const order = { id: data.nextIds.order++, customerId: user.id, status: "PENDING_VERIFICATION", deliveryAddress: body.get("deliveryAddress"), contactNumber: body.get("contactNumber"), deliveryFee: Number(body.get("deliveryFee") ?? 0), total: subtotal + Number(body.get("deliveryFee") ?? 0), createdAt: now(), items: items.map((item, index) => ({ id: index + 1, productId: Number(item.productId), quantity: Number(item.quantity), unitPrice: data.products.find((entry) => entry.id === Number(item.productId)).price })), proofOfPayment: await imageToDataUrl(body.get("proofOfPayment")) };
       data.orders.push(order);
       notifyRoles(data, ["OWNER", "STAFF"], { type: "ORDER_ACTION", title: "New order needs verification", message: `Order #${order.id} was submitted with payment proof.`, link: "/dashboard" });
       save(data); return response(order);
@@ -435,6 +464,18 @@ const api = {
       }
       return fail("Demo endpoint not found");
     }
+    if (url === "/store-settings") {
+      if (user?.role !== "OWNER") return fail("Only the owner can change the GCash QR code");
+      if (body.removeGcashQr) {
+        data.storeSettings.gcashQr = null;
+      } else {
+        const qr = await imageToDataUrl(body.get?.("gcashQr"), { maxSize: 700, quality: 0.92 });
+        if (!qr) return fail("Choose a valid image file for the QR code");
+        data.storeSettings.gcashQr = qr;
+      }
+      save(data);
+      return response(data.storeSettings);
+    }
     if (url === "/repair-settings") {
       if (user?.role !== "OWNER") return fail("Only the owner can change repair pricing");
       const complexLaborPrice = Number(body.complexLaborPrice);
@@ -504,7 +545,8 @@ const api = {
         const proof = body.get("proofOfPayment");
         if (!proof) return fail("Attach your GCash payment proof");
         ticket.paymentMethod = "GCASH";
-        ticket.paymentProof = proof.name ?? "gcash-repair-payment.png";
+        ticket.paymentProof = await imageToDataUrl(proof);
+        if (!ticket.paymentProof) return fail("Could not read that image. Try a JPG or PNG screenshot.");
         ticket.status = "PAYMENT_SUBMITTED";
         ticket.paymentSubmittedAt = now();
         notifyRoles(data, ["OWNER", "STAFF"], { type: "REPAIR_ACTION", title: "GCash proof needs verification", message: `Payment proof was submitted for service ticket #SVC-${ticket.id}.`, link: `/repairs/${ticket.id}` });
@@ -565,7 +607,7 @@ const api = {
       addNotification(data, order.customerId, { type: "ORDER_ACTION", title: "New payment proof required", message: `Please resubmit the payment proof for order #${order.id}.`, link: "/orders" });
     } else if (url.endsWith("/proof-of-payment")) {
       order.status = "PENDING_VERIFICATION";
-      order.proofOfPayment = body.get("proofOfPayment")?.name ?? "replacement-proof.png";
+      order.proofOfPayment = await imageToDataUrl(body.get("proofOfPayment"));
       notifyRoles(data, ["OWNER", "STAFF"], { type: "ORDER_ACTION", title: "Replacement proof needs review", message: `New payment proof was submitted for order #${order.id}.`, link: "/dashboard" });
     } else return fail("Demo endpoint not found");
     save(data); return response(withRelations(data, order));

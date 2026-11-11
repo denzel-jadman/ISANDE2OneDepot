@@ -160,10 +160,10 @@ export default function Dashboard() {
               </div>
 
               <h3 className="text-xs text-gray-500 mb-2">PROOF OF PAYMENT</h3>
-              {selected.proofOfPayment ? (
+              {selected.proofOfPayment?.startsWith("data:image") ? (
                 <img src={selected.proofOfPayment} alt="Proof of payment" className="rounded-card mb-5 max-h-64" />
               ) : (
-                <p className="text-gray-500 text-sm mb-5">No screenshot uploaded.</p>
+                <p className="text-gray-500 text-sm mb-5">{selected.proofOfPayment ? `Screenshot not available (saved as "${selected.proofOfPayment}" before image storage was added). Ask the customer to resubmit.` : "No screenshot uploaded."}</p>
               )}
 
               {selected.status === "PENDING_VERIFICATION" && (

@@ -6,6 +6,7 @@ import CheckoutDetails from "../components/CheckoutDetails.jsx";
 
 import { inventoryMode, lastOrderKey } from "../inventoryApi.js";
 import { cartStorageKey, fetchShopProducts, readCart } from "../shopCatalog.js";
+import { productPhotos, fallbackPhoto } from "../constants/productPhotos.js";
 
 const DELIVERY_FEE = 120;
 
@@ -27,6 +28,8 @@ function syncCart(cart, products) {
     return [{
       ...item,
       ...(inventoryMode ? { name: product.name, price: product.price, photoPath: product.photoPath } : {}),
+      sku: product?.sku ?? item.sku,
+      category: product?.category ?? item.category,
       availableQuantity,
       quantity,
     }];
@@ -111,9 +114,10 @@ export default function Cart() {
           )}
           {cart.map((item) => (
             <div key={item.productId} className="flex justify-between items-start gap-3 bg-gunmetal rounded-card p-3 mb-3">
-              {item.photoPath && <img src={item.photoPath} alt="" loading="lazy" className="hidden h-16 w-16 shrink-0 rounded-card bg-panel object-contain sm:block" />}
+              <img src={item.photoPath || productPhotos[item.category] || fallbackPhoto} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-card bg-panel object-contain sm:h-16 sm:w-16" />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold break-words">{item.name}</p>
+                {item.sku && <p className="text-[11px] text-gray-500 font-mono-data">{item.sku}</p>}
                 {showCheckout ? <p className="mt-2 text-sm text-gray-300">Quantity {item.quantity}</p> : <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={() => updateQty(item.productId, -1)}

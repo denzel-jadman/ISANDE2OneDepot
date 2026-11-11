@@ -44,8 +44,8 @@ export default function Navbar({ cartCount = 0 }) {
           <Link to="/customers" className="hover:text-amber transition-colors">Customers</Link>
         )}
         {lastOrder && <Link to={"/order-status#" + lastOrder} className="hover:text-amber transition-colors">Latest order</Link>}
-        {!inventoryMode && user?.role === "CUSTOMER" && (
-          <Link to="/orders" className="hover:text-amber transition-colors">My orders</Link>
+        {!inventoryMode && (!user || user.role === "CUSTOMER") && (
+          <Link to="/orders" className="hover:text-amber transition-colors">Track Order</Link>
         )}
         <Link to="/repairs" className="hover:text-amber transition-colors">Repairs</Link>
         {user && (user.role === "OWNER" || user.role === "STAFF") && (
@@ -54,6 +54,7 @@ export default function Navbar({ cartCount = 0 }) {
         {user && (user.role === "OWNER" || user.role === "STAFF") && (
           <Link to="/reports" className="hover:text-amber transition-colors">Reports</Link>
         )}
+        <Link to="/contact" className="hover:text-amber transition-colors">Contact</Link>
         {user?.role !== "GUNSMITH" && (
           <Link to="/cart" className="flex items-center gap-2 bg-panel px-4 py-2 rounded-card hover:bg-panel/70 transition-colors">
             Cart · {cartCount}

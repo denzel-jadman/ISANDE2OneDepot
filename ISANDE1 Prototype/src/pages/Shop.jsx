@@ -6,20 +6,7 @@ import { useOwnerSession } from "../ownerSession.jsx";
 import { inventoryMode } from "../inventoryApi.js";
 import { cartStorageKey, fetchShopProducts, readCart } from "../shopCatalog.js";
 
-const productPhotos = {
-  "Airsoft Rifles": "/product-photos/airsoft-rifle.svg",
-  "Airsoft Pistols": "/product-photos/airsoft-rifle.svg",
-  "Airsoft Parts & Internals": "/product-photos/airsoft-parts.svg",
-  "Gun Attachments": "/product-photos/gun-attachments.svg",
-  "Batteries & Chargers": "/product-photos/gun-attachments.svg",
-  "Gas & Ammunition": "/product-photos/airsoft-parts.svg",
-  "Storage & Carry": "/product-photos/gun-attachments.svg",
-  "Protective Gear": "/product-photos/gun-attachments.svg",
-  Clothing: "/product-photos/gun-attachments.svg",
-  "Knives & Utilities": "/product-photos/gun-attachments.svg",
-};
-
-const fallbackPhoto = "/product-photos/airsoft-parts.svg";
+import { productPhotos, fallbackPhoto } from "../constants/productPhotos.js";
 
 const shopSections = [
   { title: "Rifles & Pistols", categories: ["Airsoft Rifles", "Airsoft Pistols"] },
@@ -201,7 +188,7 @@ export default function Shop() {
       existing.quantity += 1;
       existing.availableQuantity = Number(product.quantity);
     } else {
-      next.push({ productId: product.id, name: product.name, price: product.price, quantity: 1, availableQuantity: Number(product.quantity) });
+      next.push({ productId: product.id, name: product.name, sku: product.sku, category: product.category, price: product.price, quantity: 1, availableQuantity: Number(product.quantity) });
     }
     setCart(next);
     localStorage.setItem(cartStorageKey, JSON.stringify(next));

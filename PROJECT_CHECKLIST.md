@@ -9,27 +9,32 @@ Updated November 17, 2026. Checked items are implemented or completed. The notes
 - [x] Connect the storefront to inventory so it displays product photos, prices, and availability from the database.
 - [x] Prepare and import a first batch of Facebook catalog items locally using draft prices and a placeholder supplier.
 - [x] Build supplier purchase orders and receiving, including partial deliveries and records for missing or damaged stock.
+- [x] Add a copyable draft purchase order message for the owner to send in Messenger or Viber.
 - [x] Build online checkout with delivery details, GCash receipt upload, owner verification, confirmation, and customer order status. The owner books Maxim directly. The local app uses demo payment settings.
 - [x] Build and test walk-in sales locally. The owner can find products by name or SKU, record a sale, deduct shared stock, and review sales history.
 - [x] Share walk-in sales, its database migration, and this checklist on GitHub.
+- [x] Build the daily sales report with separate walk-in and completed online totals.
+- [x] Share the daily sales report and supplier order message on GitHub.
+- [x] Run an end-to-end demo with one sample product. Receive stock, record a walk-in sale, confirm and deliver a demo online order, and verify the daily report.
+- [x] Review the store’s paper sales invoice sample. Keep the walk-in form focused on items, quantities, and total, with an automatic OneDepot sale reference.
 - [x] Push the inventory, restocking, and online checkout work to GitHub `main` in commit `c8113a2`.
 
 ## In progress
 
 - [ ] **Group members:** Collect product names, categories, and photo filenames in Google Sheets and save the matching images in the shared Drive folder. The group has received the instructions.
-- [ ] **Denzel:** Review the collected rows, fill in selling prices, assign unique SKUs, and confirm opening quantities with the store.
+- [ ] **Denzel:** Review the items and photos collected from Facebook. Once the sheet is ready, confirm selling prices and opening quantities with the store and assign unique SKUs.
 - [ ] **Denzel and store owner:** Confirm active suppliers and which products they carry so we can replace placeholder supplier details.
 
 ## Next up
 
-- [ ] Get redacted examples of a walk-in sale, supplier delivery, and completed online order. Use them to check what the store records and whether the walk-in summary needs more fields or a printable copy.
+- [ ] Get redacted examples of a supplier delivery and a completed online order to check the receiving and delivery workflows.
 - [ ] Copy the approved photos into the app, prepare the final CSV with matching photo paths, and preview before importing. Update any products already in OneDepot by SKU to avoid duplicate entries.
 - [ ] Check the imported catalog for missing images, incorrect prices, and stock discrepancies. Record a sample walk-in sale and complete a sample online order to confirm both update the same stock.
 
 ## Before store use
 
 - [ ] Confirm the store’s GCash recipient and delivery fee rules before switching checkout out of demo mode.
-- [ ] Confirm whether repairs, waitlists, and reports are required for this release. They currently exist in the browser-only prototype. Connect any required workflows to the database and test them before release.
+- [ ] Confirm whether repairs, waitlists, and any reports beyond daily sales are required for this release. Connect any required workflows to the database and test them before release.
 - [ ] Decide where the store will run OneDepot, then set up the database, owner access, and backups for that environment.
 - [ ] Have the owner try product updates, receiving, walk-in sales, and online order verification. Record feedback, resolve blockers, and agree on which open transactions to carry over at launch.
 

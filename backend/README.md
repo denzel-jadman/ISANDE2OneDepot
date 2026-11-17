@@ -56,7 +56,7 @@ Submitted receipts appear in **Order requests**. Compare the receipt with the sh
 
 ## Receive a supplier delivery
 
-Open **Restocking**, create a purchase order with an existing supplier and catalog products, and mark it as sent after sending it to the supplier. For each delivery, enter the good and damaged units that arrived. Good units update stock, damaged units appear in **Notes**, and outstanding units stay open for the next delivery. Each receipt is listed in **Delivery history** and links to its stock movements.
+Open **Restocking** and create a purchase order with an existing supplier and catalog products. Use **Copy order message** to paste the order into Messenger or Viber, or use **Print PO** to save a PDF and attach it. Select **Mark as sent** after sending it to the supplier. For each delivery, enter the good and damaged units that arrived. Good units update stock, damaged units appear in **Notes**, and outstanding units stay open for the next delivery. Each receipt is listed in **Delivery history** and links to its stock movements.
 
 ## Import suppliers and opening inventory
 

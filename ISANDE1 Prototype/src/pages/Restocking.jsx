@@ -297,7 +297,24 @@ function ReceivingForm({ purchaseOrder, values, setValues, onSubmit, onCancel, s
 }
 
 function PurchaseOrderCard({ purchaseOrder, receivingId, receiptValues, setReceiptValues, onStartReceiving, onCancelReceiving, onReceive, onSend, onPrint, isPrintTarget, savingReceipt }) {
+  const [copyStatus, setCopyStatus] = useState("");
   const status = statusDetails[purchaseOrder.status] ?? statusDetails.DRAFT;
+  const message = inventoryMode && purchaseOrder.status === "DRAFT" ? [
+    `Hi ${purchaseOrder.supplierName}, please confirm availability for purchase order ${purchaseOrder.poNumber} from Justin’s Hobby Depot.`,
+    ...purchaseOrder.items.map(({ orderedQuantity, product }) => `• ${orderedQuantity} × ${product.name} (${product.sku})`),
+    ...(purchaseOrder.expectedDate ? [`Requested delivery date: ${formatDate(purchaseOrder.expectedDate)}`] : []),
+    "Thank you!",
+  ].join("\n") : "";
+
+  async function copyOrderMessage() {
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("manual");
+    }
+  }
+
   return (
     <article className={`purchase-order-print-area bg-panel border border-gray-700 rounded-card overflow-hidden ${isPrintTarget ? "purchase-order-print-target" : ""}`}>
       <div className="p-5 flex flex-wrap items-start justify-between gap-4 border-b border-gray-700">
@@ -309,7 +326,7 @@ function PurchaseOrderCard({ purchaseOrder, receivingId, receiptValues, setRecei
           <p className="text-sm text-gray-300 mt-1">{purchaseOrder.supplierName}</p>
           <p className="text-sm text-gray-300 mt-1">Created {formatDate(purchaseOrder.createdAt)} · Expected {formatDate(purchaseOrder.expectedDate)}</p>
           {inventoryMode && purchaseOrder.status === "DRAFT" && (
-            <p className="mt-2 text-sm text-gray-300">Share this order with the supplier, then choose Mark as sent.</p>
+            <p className="mt-2 text-sm text-gray-300">Copy the order message or save the purchase order as a PDF. Send it in Messenger or Viber, then choose Mark as sent.</p>
           )}
           {inventoryMode && (purchaseOrder.status === "SENT" || purchaseOrder.status === "PARTIAL") && (
             <p className="mt-2 text-sm text-gray-300">When items arrive, choose Receive delivery.</p>
@@ -373,10 +390,26 @@ function PurchaseOrderCard({ purchaseOrder, receivingId, receiptValues, setRecei
           {purchaseOrder.supplierPhone && <span>{purchaseOrder.supplierPhone}</span>}
         </div>
         <div className="flex flex-wrap gap-2">
+          {inventoryMode && purchaseOrder.status === "DRAFT" && (
+            <button type="button" onClick={copyOrderMessage}
+              className="min-h-11 rounded-card border border-gray-700 px-3 text-sm font-semibold hover:border-amber hover:text-amber">
+              Copy order message
+            </button>
+          )}
           <button onClick={() => onPrint(purchaseOrder)} className="border border-gray-700 rounded-card px-3 py-2 text-xs font-semibold hover:border-amber hover:text-amber">Print PO</button>
           {purchaseOrder.status === "DRAFT" && <button onClick={() => onSend(purchaseOrder)} className="bg-amber text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold hover:bg-amber/80">{inventoryMode ? "Mark as sent" : "Send to supplier"}</button>}
           {(purchaseOrder.status === "SENT" || purchaseOrder.status === "PARTIAL") && <button disabled={savingReceipt} onClick={() => onStartReceiving(purchaseOrder)} className="bg-olive text-gunmetal rounded-card px-4 py-2.5 text-sm font-bold hover:bg-olive/80">Receive delivery</button>}
         </div>
+        {purchaseOrder.status === "DRAFT" && copyStatus === "copied" && (
+          <p role="status" className="basis-full text-sm text-gray-200">Order message copied. Paste it into the supplier’s Messenger or Viber chat.</p>
+        )}
+        {purchaseOrder.status === "DRAFT" && copyStatus === "manual" && (
+          <label className="basis-full text-sm text-gray-200">
+            Select and copy this message into the supplier’s chat.
+            <textarea readOnly rows={5} value={message} onFocus={(event) => event.target.select()}
+              className="mt-2 w-full rounded-card border border-gray-700 bg-gunmetal p-3 text-base" />
+          </label>
+        )}
       </div>
 
       {receivingId === purchaseOrder.id && <div className="px-5 pb-5"><ReceivingForm purchaseOrder={purchaseOrder} values={receiptValues} setValues={setReceiptValues} onSubmit={(event) => onReceive(event, purchaseOrder)} onCancel={onCancelReceiving} saving={savingReceipt} /></div>}

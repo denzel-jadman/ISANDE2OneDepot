@@ -3,6 +3,7 @@ import InventoryNavbar from "../components/InventoryNavbar.jsx";
 
 const tasks = [
   { path: "/walk-in-sales", label: "Walk-in sales", description: "Record counter purchases and see past walk-in sales." },
+  { path: "/reports", label: "Daily sales", description: "Compare walk-in and completed online sales by date." },
   { path: "/products", label: "Products", description: "Check stock, add products, and manage suppliers." },
   { path: "/restocking", label: "Restocking", description: "Create purchase orders and record deliveries as they arrive." },
   { path: "/order-requests", label: "Order requests", description: "Review requests from shoppers and contact them to arrange orders." },

@@ -18,6 +18,7 @@ import MyOrders from "./pages/MyOrders.jsx";
 import Repairs from "./pages/Repairs.jsx";
 import Customers from "./pages/Customers.jsx";
 import Reports from "./pages/Reports.jsx";
+import DailySalesReport from "./pages/DailySalesReport.jsx";
 import Restocking from "./pages/Restocking.jsx";
 
 function CustomerShopRoute({ children }) {
@@ -70,7 +71,7 @@ function AppRoutes() {
       <Route path="/repairs/:id" element={<ServiceTicket />} />
       <Route path="/repairs" element={<Repairs />} />
       <Route path="/customers" element={<Customers />} />
-      <Route path="/reports" element={<Reports />} />
+      <Route path="/reports" element={inventoryMode ? <OwnerRoute><DailySalesReport /></OwnerRoute> : <Reports />} />
       <Route path="/restocking" element={<OwnerRoute><Restocking /></OwnerRoute>} />
       <Route path="/products" element={<OwnerRoute><ProductManagement /></OwnerRoute>} />
       <Route path="/settings" element={<Settings />} />

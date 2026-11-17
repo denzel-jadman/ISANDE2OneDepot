@@ -5,6 +5,7 @@ import { createProduct, integer, problem, productInput, supplierInput } from "./
 import { inventoryImport } from "./inventoryImport.js";
 import { restocking } from "./restocking.js";
 import { listWalkInSales, recordWalkInSale } from "./walkInSales.js";
+import { dailySalesReport } from "./salesReport.js";
 import {
   checkoutSettings, completeCustomerRequest, confirmCustomerRequest, customerOrderStatus,
   listCustomerRequests, ownerPaymentProof, requestReplacementProof, reviewCustomerRequest,
@@ -83,6 +84,7 @@ api.get("/session", (_req, res) => res.sendStatus(204));
 api.get("/customer-requests", listCustomerRequests);
 api.get("/walk-in-sales", listWalkInSales);
 api.post("/walk-in-sales", recordWalkInSale);
+api.get("/reports/daily-sales", dailySalesReport);
 api.get("/customer-requests/:id/proof", ownerPaymentProof);
 api.patch("/customer-requests/:id/request-proof", requestReplacementProof);
 api.patch("/customer-requests/:id/review", reviewCustomerRequest);

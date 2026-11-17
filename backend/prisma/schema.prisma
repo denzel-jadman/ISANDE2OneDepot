@@ -26,6 +26,7 @@ model Product {
   orderItems         PurchaseOrderItem[]
   restockNotes       RestockNote[]
   customerOrderItems CustomerOrderRequestItem[]
+  walkInSaleItems    WalkInSaleItem[]
 }
 
 model Supplier {
@@ -49,6 +50,8 @@ model StockMovement {
   receiptItem         RestockReceiptItem?       @relation(fields: [receiptItemId], references: [id], onDelete: Restrict)
   customerOrderItemId Int?                      @unique
   customerOrderItem   CustomerOrderRequestItem? @relation(fields: [customerOrderItemId], references: [id], onDelete: Restrict)
+  walkInSaleItemId    Int?                      @unique
+  walkInSaleItem      WalkInSaleItem?           @relation(fields: [walkInSaleItemId], references: [id], onDelete: Restrict)
 
   @@index([productId, id])
 }
@@ -58,6 +61,7 @@ enum StockMovementKind {
   ADJUSTMENT
   RESTOCK
   ORDER_CONFIRMED
+  WALK_IN_SALE
 }
 
 model PurchaseOrder {
@@ -175,4 +179,27 @@ model CustomerOrderRequestItem {
   movement       StockMovement?
 
   @@unique([orderRequestId, productId])
+}
+
+model WalkInSale {
+  id          Int              @id @default(autoincrement())
+  requestId   String           @unique @db.VarChar(36)
+  requestHash String           @db.Char(64)
+  createdAt   DateTime         @default(now())
+  items       WalkInSaleItem[]
+}
+
+model WalkInSaleItem {
+  id        Int            @id @default(autoincrement())
+  saleId    Int
+  sale      WalkInSale     @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  productId Int
+  product   Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sku       String         @db.VarChar(64)
+  name      String         @db.VarChar(160)
+  price     Decimal        @db.Decimal(12, 2)
+  quantity  Int
+  movement  StockMovement?
+
+  @@unique([saleId, productId])
 }

@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useOwnerSession } from "../ownerSession.jsx";
 import BackLink from "./BackLink.jsx";
 
-const screens = { "/": "Home", "/products": "Products", "/restocking": "Restocking", "/order-requests": "Order requests", "/shop": "Shop" };
+const screens = { "/": "Home", "/walk-in-sales": "Walk-in sales", "/products": "Products", "/restocking": "Restocking", "/order-requests": "Order requests", "/shop": "Shop" };
 
 function navClass({ isActive }) {
   return `inline-flex min-h-11 items-center rounded-card px-3 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber ${isActive

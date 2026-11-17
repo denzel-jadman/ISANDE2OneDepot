@@ -2,6 +2,7 @@ import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import OwnerHome from "./pages/OwnerHome.jsx";
 import OrderRequests from "./pages/OrderRequests.jsx";
+import WalkInSales from "./pages/WalkInSales.jsx";
 import BackLink from "./components/BackLink.jsx";
 import { OwnerSessionProvider, useOwnerSession } from "./ownerSession.jsx";
 import { inventoryMode } from "./inventoryApi.js";
@@ -64,6 +65,7 @@ function AppRoutes() {
       {inventoryMode && <Route path="/order-status" element={<CustomerOrderStatus key={hash} orderKey={hash.slice(1)} />} />}
       <Route path="/orders" element={<MyOrders />} />
       {inventoryMode && <Route path="/order-requests" element={<OwnerRoute><OrderRequests /></OwnerRoute>} />}
+      {inventoryMode && <Route path="/walk-in-sales" element={<OwnerRoute><WalkInSales /></OwnerRoute>} />}
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/repairs/:id" element={<ServiceTicket />} />
       <Route path="/repairs" element={<Repairs />} />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import api from "../api.js";
+import GcashQr from "../components/GcashQr.jsx";
 
 export default function Settings() {
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -9,8 +10,13 @@ export default function Settings() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [qrFile, setQrFile] = useState(null);
+  const [qrMessage, setQrMessage] = useState("");
+  const [qrKey, setQrKey] = useState(0);
 
   const token = localStorage.getItem("onedepot_token");
+  let isOwner = false;
+  try { isOwner = JSON.parse(atob(token.split(".")[1])).role === "OWNER"; } catch { isOwner = false; }
   if (!token) {
     navigate("/login");
     return null;
@@ -54,6 +60,28 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function saveQr(event) {
+    event.preventDefault();
+    setQrMessage("");
+    if (!qrFile) { setQrMessage("Choose an image of your GCash QR code first."); return; }
+    try {
+      const formData = new FormData();
+      formData.append("gcashQr", qrFile);
+      await api.patch("/store-settings", formData);
+      setQrFile(null);
+      setQrKey((key) => key + 1);
+      setQrMessage("GCash QR code saved. Customers will see it at checkout.");
+    } catch (err) {
+      setQrMessage(err.response?.data?.error ?? "Could not save the QR code.");
+    }
+  }
+
+  async function removeQr() {
+    await api.patch("/store-settings", { removeGcashQr: true });
+    setQrKey((key) => key + 1);
+    setQrMessage("GCash QR code removed.");
   }
 
   return (
@@ -125,6 +153,22 @@ export default function Settings() {
             </button>
           </form>
         </div>
+
+        {isOwner && (
+          <div className="bg-panel border border-gray-700 rounded-card p-8 mt-6">
+            <h2 className="font-heading text-xl mb-2">GCash QR code</h2>
+            <p className="text-sm text-gray-400 mb-5">Upload the shop&apos;s GCash QR. It appears on the online checkout and the repair payment screen.</p>
+            <div className="mb-5" key={qrKey}><GcashQr /></div>
+            <form onSubmit={saveQr} className="space-y-4">
+              <input type="file" accept="image/png,image/jpeg" onChange={(event) => setQrFile(event.target.files?.[0] ?? null)} className="w-full text-xs text-gray-400" />
+              {qrMessage && <p className="text-sm text-gray-300">{qrMessage}</p>}
+              <div className="flex gap-3">
+                <button type="submit" className="bg-amber text-gunmetal font-semibold rounded-card px-4 py-2 text-sm">Save QR code</button>
+                <button type="button" onClick={removeQr} className="border border-gray-700 rounded-card px-4 py-2 text-sm hover:border-amber">Remove</button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

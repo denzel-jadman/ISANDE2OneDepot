@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import api from "../api.js";
+import GcashQr from "../components/GcashQr.jsx";
 
 const DELIVERY_FEE = 120;
 
@@ -112,9 +113,7 @@ export default function Checkout() {
           <p className="text-xs text-gray-500 font-mono-data mb-1">STEP 3 OF 3</p>
           <h2 className="font-heading text-lg mb-4">Pay with GCash</h2>
 
-          <div className="bg-gunmetal rounded-card aspect-square max-w-[180px] mx-auto mb-2 flex items-center justify-center text-gray-600 text-xs">
-            QR code placeholder
-          </div>
+          <div className="mb-2"><GcashQr /></div>
           <p className="text-center text-xs text-gray-500 mb-6">
             Scan to pay · Justin's Hobby Depot
           </p>
